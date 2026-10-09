@@ -1,0 +1,14 @@
+{
+  "name": "한눈에 정산",
+  "short_name": "한눈에 정산",
+  "description": "사람별 금액과 내용을 정리하고 자동 합산하는 앱",
+  "lang": "ko-KR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#176b53",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

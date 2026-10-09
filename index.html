@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176b53">
+<meta name="description" content="사람별 금액과 내용을 정리하고 자동 합산하는 한눈에 정산">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>한눈에 정산</title>
+<style>
+:root{color-scheme:light;--green:#176b53;--green2:#e7f4ee;--ink:#17221d;--muted:#68766f;--line:#dce5df;--bg:#f4f7f5;--white:#fff;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;font-size:16px}
+header{background:var(--green);color:white;padding:22px 18px 20px;border-radius:0 0 22px 22px}
+header h1{font-size:24px;margin:0 0 5px}header p{margin:0;color:#d8eee5;font-size:13px}
+main{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:13px;box-shadow:0 2px 8px #193c2b08}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;color:#45564c}
+input,textarea,select{width:100%;border:1px solid #cbd8d0;border-radius:11px;padding:12px;font:inherit;background:white;color:var(--ink);min-width:0}
+textarea{min-height:112px;resize:vertical;line-height:1.6}
+.row{display:flex;gap:9px;align-items:end}.row>*{flex:1}
+button{font:inherit;font-weight:700;border:0;border-radius:11px;padding:12px 14px;cursor:pointer;min-height:45px}
+.primary{background:var(--green);color:white}.soft{background:var(--green2);color:var(--green)}.neutral{background:#edf1ee;color:#28372f}.danger{background:#fff0ef;color:var(--red)}button:disabled{opacity:.5}
+.help{font-size:12px;color:var(--muted);line-height:1.5;margin-top:7px}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--green2);border-radius:13px;padding:14px}.metric small{display:block;color:#426456;margin-bottom:5px}.metric strong{font-size:23px;color:var(--green);letter-spacing:-.4px}.metric .sub{font-size:12px;color:#426456;margin-top:4px}
+.section-title{font-size:17px;margin:0 0 12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+.person{border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden;background:white}.person-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f0f6f2}.person-head strong{font-size:16px}.person-total{font-weight:800;color:var(--green);font-size:18px}.item{padding:11px 13px;border-top:1px solid #edf1ee;display:flex;gap:8px;align-items:center}.item-main{flex:1;min-width:0}.item-content{font-weight:650;overflow-wrap:anywhere}.item-meta{font-size:12px;color:var(--muted);margin-top:3px}.item-amount{font-weight:750;white-space:nowrap}.mini-actions{display:flex;gap:5px}.mini-actions button{padding:7px 9px;min-height:34px;font-size:12px}
+.totalbar{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:13px;margin-top:14px}.totalbar strong{font-size:22px;color:var(--green)}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 5px}.status{font-size:13px;margin-top:8px;color:var(--muted);min-height:18px}.status.error{color:var(--red)}.status.ok{color:var(--green)}
+dialog{border:0;border-radius:18px;width:calc(100% - 28px);max-width:440px;padding:20px;box-shadow:0 15px 50px #0003}dialog::backdrop{background:#10221980}dialog h2{margin-top:0;font-size:19px}dialog .formrow{margin-bottom:12px}dialog .actions{margin-top:16px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 15px 20px}
+@media(min-width:600px){main{padding-top:20px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-grid .wide{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><h1>한눈에 정산</h1><p>이름 · 금액 · 내용만 입력하면 사람별로 자동 합산</p></header>
+<main>
+  <section class="panel">
+    <div class="row">
+      <div><label for="day">정산 날짜</label><input id="day" type="date"></div>
+      <button id="newDay" class="soft" type="button">오늘 날짜</button>
+    </div>
+    <p class="help">날짜별로 이 기기에 자동 저장됩니다.</p>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">금액 입력</h2>
+    <div class="form-grid">
+      <div><label for="person">사람 이름</label><input id="person" placeholder="예: 도현" autocomplete="off"></div>
+      <div><label for="amount">금액 (천 원 단위)</label><input id="amount" type="number" min="0" step="0.1" inputmode="decimal" placeholder="예: 18"></div>
+      <div class="wide"><label for="content">내용</label><input id="content" placeholder="예: 커피" autocomplete="off"></div>
+    </div>
+    <div class="actions" style="margin-top:11px">
+      <button class="primary" id="addBtn" type="button">＋ 항목 추가</button>
+      <button class="soft" id="voiceBtn" type="button">🎙 음성 입력</button>
+    </div>
+    <p class="help">예: 이름 <b>도현</b>, 금액 <b>18</b>, 내용 <b>커피</b> → 18,000원. 음성은 “도현 18 커피, 상현 29 족발”처럼 말해 보세요.</p>
+    <div id="status" class="status" aria-live="polite"></div>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">여러 건 한 번에 입력</h2>
+    <label for="bulk">한 줄에 한 항목씩: 이름 금액 내용</label>
+    <textarea id="bulk" placeholder="도현 18 커피&#10;상현 29 족발&#10;상호 39 약"></textarea>
+    <div class="actions" style="margin-top:10px">
+      <button id="bulkBtn" class="primary" type="button">일괄 입력</button>
+      <button id="clearBulk" class="neutral" type="button">입력칸 비우기</button>
+    </div>
+    <p class="help">금액은 천 원 단위로 입력합니다. 예를 들어 18은 18,000원입니다.</p>
+  </section>
+  <section class="panel">
+    <div class="summary">
+      <div class="metric"><small>전체 합계</small><strong id="grandTotal">0원</strong><div class="sub">모든 항목 합산</div></div>
+      <div class="metric"><small>인원 · 항목</small><strong id="counts">0명 · 0건</strong><div class="sub">현재 선택 날짜</div></div>
+    </div>
+    <div class="totalbar"><h2 class="section-title" style="margin:0">사람별 정산</h2><button id="copyBtn" class="soft" type="button">결과 복사</button></div>
+    <div id="results"></div>
+    <div class="actions" style="margin-top:12px">
+      <button id="exportBtn" class="neutral" type="button">CSV 내보내기</button>
+      <button id="clearDayBtn" class="danger" type="button">이 날짜 내역 삭제</button>
+    </div>
+    <p class="help">내역은 서버가 아닌 이 브라우저의 저장 공간에 보관됩니다. 브라우저 데이터 삭제 시 기록이 사라질 수 있으니 필요하면 CSV로 내보내세요.</p>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">날짜별 기록</h2>
+    <label for="savedDates">저장된 날짜 선택</label>
+    <div class="row"><select id="savedDates"></select><button id="loadDate" class="soft" type="button">불러오기</button></div>
+  </section>
+</main>
+<footer>한눈에 정산 · 금액 입력 단위: 천 원 · 금액은 원 단위로 표시</footer>
+
+<dialog id="editDialog">
+  <h2>항목 수정</h2>
+  <div class="formrow"><label for="editPerson">사람 이름</label><input id="editPerson"></div>
+  <div class="formrow"><label for="editAmount">금액 (천 원 단위)</label><input id="editAmount" type="number" min="0" step="0.1"></div>
+  <div class="formrow"><label for="editContent">내용</label><input id="editContent"></div>
+  <div class="actions"><button id="cancelEdit" class="neutral" type="button">취소</button><button id="saveEdit" class="primary" type="button">수정 저장</button></div>
+</dialog>
+<script>
+const $ = id => document.getElementById(id);
+const DBKEY = "hannune-jungsan-v1";
+let db = readDB(), editId = null, recognition = null, listening = false;
+function readDB(){try{return JSON.parse(localStorage.getItem(DBKEY)||"{}")}catch(e){return {}}}
+function saveDB(){localStorage.setItem(DBKEY,JSON.stringify(db));}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function selectedDay(){return $("day").value||today()}
+function dayItems(day=selectedDay()){return Array.isArray(db[day])?db[day]:[]}
+function fmtWon(thousands){return Math.round(thousands*1000).toLocaleString("ko-KR")+"원"}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function setStatus(msg,type=""){const el=$("status");el.textContent=msg;el.className="status "+type}
+function addItem(name,amount,content,day=selectedDay()){name=name.trim();content=content.trim();amount=Number(amount);if(!name||!Number.isFinite(amount)||amount<0){return false}if(!db[day])db[day]=[];db[day].push({id:uid(),name,amount,content:content||"내용 없음",createdAt:Date.now()});saveDB();return true}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){
+ const items=dayItems().slice(); const map={}; let total=0;
+ for(const it of items){if(!map[it.name])map[it.name]={name:it.name,items:[],sum:0};map[it.name].items.push(it);map[it.name].sum+=Number(it.amount);total+=Number(it.amount)}
+ const people=Object.values(map).sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+ $("grandTotal").textContent=fmtWon(total);$("counts").textContent=`${people.length}명 · ${items.length}건`;
+ const results=$("results");
+ if(!people.length){results.innerHTML='<div class="empty">이 날짜에는 아직 내역이 없습니다.<br>위에서 금액을 입력해 보세요.</div>'}
+ else {results.innerHTML=people.map(p=>`<div class="person"><div class="person-head"><strong>${escapeHtml(p.name)}</strong><span class="person-total">${fmtWon(p.sum)}</span></div>${p.items.map(it=>`<div class="item"><div class="item-main"><div class="item-content">${escapeHtml(it.content||"내용 없음")}</div><div class="item-meta">${escapeHtml(it.name)} · ${Number(it.amount).toLocaleString("ko-KR")}천 원</div></div><div class="item-amount">${fmtWon(it.amount)}</div><div class="mini-actions"><button class="soft" data-edit="${it.id}" type="button">수정</button><button class="danger" data-delete="${it.id}" type="button">삭제</button></div></div>`).join("")}</div>`).join("")}
+ const dates=Object.keys(db).filter(d=>Array.isArray(db[d])&&db[d].length).sort((a,b)=>b.localeCompare(a));
+ $("savedDates").innerHTML=dates.length?dates.map(d=>`<option value="${d}" ${d===selectedDay()?"selected":""}>${d} (${db[d].length}건)</option>`).join(""):`<option value="${selectedDay()}">${selectedDay()} (내역 없음)</option>`;
+}
+function parseLine(line){const m=line.trim().match(/^(\S+)\s+(\d+(?:\.\d+)?)\s*(.*)$/);if(!m)return null;return {name:m[1],amount:Number(m[2]),content:m[3]||""}}
+function addForm(){const ok=addItem($("person").value,$("amount").value,$("content").value);if(!ok){setStatus("이름과 0 이상의 금액을 입력해 주세요.","error");return} $("person").value="";$("amount").value="";$("content").value="";$("person").focus();setStatus("항목을 추가했어요.","ok");render()}
+$("addBtn").addEventListener("click",addForm);
+["person","amount","content"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(id==="content")addForm();else $(id==="person"?"amount":"content").focus()}}));
+$("bulkBtn").addEventListener("click",()=>{const lines=$("bulk").value.split(/\n|[,，]/).map(x=>x.trim()).filter(Boolean);let count=0,bad=[];for(const line of lines){const x=parseLine(line);if(x&&addItem(x.name,x.amount,x.content))count++;else bad.push(line)}render();setStatus(count+"건을 추가했어요."+ (bad.length? " 형식 확인 필요: "+bad.join(" / "):""),bad.length?"error":"ok");if(!bad.length)$("bulk").value=""});
+$("clearBulk").addEventListener("click",()=>{$("bulk").value=""});
+$("day").value=today();$("day").addEventListener("change",render);$("newDay").addEventListener("click",()=>{$("day").value=today();render()});
+$("results").addEventListener("click",e=>{const del=e.target.closest("[data-delete]");const edit=e.target.closest("[data-edit]");if(del){const id=del.dataset.delete;if(confirm("이 항목을 삭제할까요?")){db[selectedDay()]=dayItems().filter(x=>x.id!==id);saveDB();render();setStatus("항목을 삭제했어요.","ok")}}if(edit){const item=dayItems().find(x=>x.id===edit.dataset.edit);if(!item)return;editId=item.id;$("editPerson").value=item.name;$("editAmount").value=item.amount;$("editContent").value=item.content;$("editDialog").showModal()}});
+$("cancelEdit").addEventListener("click",()=>$("editDialog").close());
+$("saveEdit").addEventListener("click",()=>{const name=$("editPerson").value.trim(),amount=Number($("editAmount").value),content=$("editContent").value.trim();if(!name||$("editAmount").value===""||!Number.isFinite(amount)||amount<0){alert("이름과 0 이상의 금액을 확인해 주세요.");return}const item=dayItems().find(x=>x.id===editId);if(item){item.name=name;item.amount=amount;item.content=content||"내용 없음";saveDB();render();setStatus("수정 내용을 저장했어요.","ok")}$("editDialog").close()});
+function summaryText(){const items=dayItems(),map={};let total=0;items.forEach(it=>{if(!map[it.name])map[it.name]={sum:0,items:[]};map[it.name].sum+=Number(it.amount);map[it.name].items.push(it);total+=Number(it.amount)});const people=Object.keys(map).sort((a,b)=>a.localeCompare(b,"ko"));return [`한눈에 정산 (${selectedDay()})`,"",...people.flatMap(n=>[`${n} 합계: ${fmtWon(map[n].sum)}`,...map[n].items.map(it=>`  ${it.content}: ${fmtWon(it.amount)}`),""]),`전체 합계: ${fmtWon(total)}`].join("\n")}
+$("copyBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(summaryText());setStatus("정산 결과를 복사했어요.","ok")}catch(e){const ta=document.createElement("textarea");ta.value=summaryText();document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();setStatus(ok?"정산 결과를 복사했어요.":"복사할 수 없어요. 브라우저 권한을 확인해 주세요.",ok?"ok":"error")}});
+$("exportBtn").addEventListener("click",()=>{const rows=[["날짜","이름","금액(천원)","금액(원)","내용"],...dayItems().map(it=>[selectedDay(),it.name,it.amount,Math.round(it.amount*1000),it.content])];const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`한눈에정산-${selectedDay()}.csv`;a.click();URL.revokeObjectURL(url)});
+$("clearDayBtn").addEventListener("click",()=>{if(confirm(selectedDay()+" 내역을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.")){delete db[selectedDay()];saveDB();render();setStatus("해당 날짜 내역을 삭제했어요.","ok")}});
+$("loadDate").addEventListener("click",()=>{if($("savedDates").value){$("day").value=$("savedDates").value;render();setStatus("선택한 날짜 내역을 불러왔어요.","ok")}});
+function parseSpokenNumber(token){
+ token=token.replace(/[,，]/g,"").trim();if(/^\d+(?:\.\d+)?$/.test(token))return Number(token);
+ const digit={"영":0,"공":0,"일":1,"이":2,"삼":3,"사":4,"오":5,"육":6,"륙":6,"칠":7,"팔":8,"구":9};
+ if(token.includes("만")||token.includes("천")||token.includes("백")||token.includes("십")){
+   let total=0,section=0,num=0;for(const ch of token){if(ch in digit)num=digit[ch];else if(ch==="십"){section+=(num||1)*10;num=0}else if(ch==="백"){section+=(num||1)*100;num=0}else if(ch==="천"){section+=(num||1)*1000;num=0}else if(ch==="만"){total+=(section+num||1)*10000;section=0;num=0}}return total+section+num;
+ }
+ let n=0;for(const ch of token){if(ch in digit)n=n*10+digit[ch];else return null}return n||null;
+}
+function parseSpeech(text){
+ // Accept sequences such as "도현 18 커피, 상현 29 족발" or Korean number words.
+ const chunks=text.replace(/[。;]/g,",").split(/[,，\n]+/).map(s=>s.trim()).filter(Boolean),out=[];
+ for(const chunk of chunks){
+   let m=chunk.match(/^(\S+?)\s+([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);
+   if(m){out.push({name:m[1],amount:Number(m[2]),content:m[3]||""});continue}
+   // Common Korean speech recognition output: "도현 십팔 커피"
+   m=chunk.match(/^(\S+?)\s+(.+?)\s+(.+)$/);
+   if(m){const n=parseSpokenNumber(m[2]);if(n!==null){out.push({name:m[1],amount:n,content:m[3]});continue}}
+ }
+ return out;
+}
+$("voiceBtn").addEventListener("click",()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){setStatus("이 브라우저는 음성 인식을 지원하지 않을 수 있어요. Android Chrome에서 다시 시도하거나 직접 입력을 사용해 주세요.","error");return}
+ if(listening&&recognition){recognition.stop();return}
+ recognition=new SR();recognition.lang="ko-KR";recognition.continuous=true;recognition.interimResults=true;listening=true;$("voiceBtn").textContent="■ 음성 입력 종료";setStatus("듣는 중이에요. 예: 도현 18 커피, 상현 29 족발");
+ let finalText="";
+ recognition.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t+" ";else interim+=t} $("bulk").value=(finalText+interim).trim();};
+ recognition.onerror=e=>{setStatus("음성 인식 오류: "+e.error+". 마이크 권한을 확인해 주세요.","error")};
+ recognition.onend=()=>{listening=false;$("voiceBtn").textContent="🎙 음성 입력";if(finalText.trim()){const parsed=parseSpeech(finalText);if(parsed.length){parsed.forEach(x=>addItem(x.name,x.amount,x.content));render();$("bulk").value="";setStatus(parsed.length+"건을 음성으로 추가했어요.","ok")}else{setStatus("음성을 들었지만 항목 형식을 구분하지 못했어요. 입력칸에서 내용을 확인한 뒤 '일괄 입력'을 눌러 주세요.","error")}}};
+ try{recognition.start()}catch(e){listening=false;$("voiceBtn").textContent="🎙 음성 입력";setStatus("음성 인식을 시작하지 못했어요. 다시 시도해 주세요.","error")}
+});
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+render();
+</script>
+</body>
+</html>
