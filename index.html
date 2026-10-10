@@ -40,7 +40,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 15px 20px
       <div><label for="day">정산 날짜</label><input id="day" type="date"></div>
       <button id="newDay" class="soft" type="button">오늘 날짜</button>
     </div>
-    <p class="help">날짜별로 이 기기에 자동 저장됩니다.</p>
+    <p class="help">날짜별 정산 내역은 모든 사용자와 공유됩니다.</p>
   </section>
   <section class="panel">
     <h2 class="section-title">금액 입력</h2>
@@ -67,6 +67,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 15px 20px
     <p class="help">금액은 천 원 단위로 입력합니다. 예를 들어 18은 18,000원입니다.</p>
   </section>
   <section class="panel">
+    <h2 class="section-title">직원 명부 관리</h2>
+    <p class="help">직원 이름과 소속을 등록하면 모든 사용자의 앱에 같은 명부가 표시됩니다. 인트로·퀄리티·ㅋㅋ 중 하나를 지정하고, 그 외 이름은 자동으로 기타로 분류됩니다.</p>
+    <div class="form-grid">
+      <div><label for="employeeName">직원 이름</label><input id="employeeName" placeholder="예: 홍길동" autocomplete="off"></div>
+      <div><label for="employeeGroup">소속 그룹</label><select id="employeeGroup"><option>인트로</option><option>퀄리티</option><option>ㅋㅋ</option></select></div>
+    </div>
+    <div class="actions" style="margin-top:10px"><button id="employeeAdd" class="primary" type="button">＋ 직원 등록</button></div>
+    <div id="employeeList"></div>
+    <div id="employeeStatus" class="status" aria-live="polite"></div>
+  </section>
+  <section class="panel">
     <div class="summary">
       <div class="metric"><small>전체 합계</small><strong id="grandTotal">0원</strong><div class="sub">모든 항목 합산</div></div>
       <div class="metric"><small>인원 · 항목</small><strong id="counts">0명 · 0건</strong><div class="sub">현재 선택 날짜</div></div>
@@ -77,7 +88,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 15px 20px
       <button id="exportBtn" class="neutral" type="button">CSV 내보내기</button>
       <button id="clearDayBtn" class="danger" type="button">이 날짜 내역 삭제</button>
     </div>
-    <p class="help">내역은 서버가 아닌 이 브라우저의 저장 공간에 보관됩니다. 브라우저 데이터 삭제 시 기록이 사라질 수 있으니 필요하면 CSV로 내보내세요.</p>
+    <p class="help">정산 내역과 직원 명부는 공유 데이터베이스에 저장됩니다. 누구나 등록·수정·삭제할 수 있으므로 공용 링크를 신뢰하는 사람과만 공유하세요.</p>
   </section>
   <section class="panel">
     <h2 class="section-title">날짜별 기록</h2>
@@ -94,45 +105,98 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:4px 15px 20px
   <div class="formrow"><label for="editContent">내용</label><input id="editContent"></div>
   <div class="actions"><button id="cancelEdit" class="neutral" type="button">취소</button><button id="saveEdit" class="primary" type="button">수정 저장</button></div>
 </dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const DBKEY = "hannune-jungsan-v1";
-let db = readDB(), editId = null, recognition = null, listening = false;
+let db = {}, employees = [], editId = null, recognition = null, listening = false;
+const cloudReady = !!(window.supabase && window.APP_CONFIG && APP_CONFIG.url && APP_CONFIG.anonKey && !APP_CONFIG.url.includes("YOUR_"));
+const cloud = cloudReady ? window.supabase.createClient(APP_CONFIG.url, APP_CONFIG.anonKey) : null;
 function readDB(){try{return JSON.parse(localStorage.getItem(DBKEY)||"{}")}catch(e){return {}}}
 function saveDB(){localStorage.setItem(DBKEY,JSON.stringify(db));}
+function setEmployeeStatus(msg,type=""){const el=$("employeeStatus");if(el){el.textContent=msg;el.className="status "+type}}
+function groupFor(name){const e=employees.find(x=>x.name.toLocaleLowerCase("ko-KR")===name.trim().toLocaleLowerCase("ko-KR"));return e?e.group:"기타"}
+async function loadCloud(){
+ if(!cloud){db=readDB();employees=[];render();setStatus("공유 데이터베이스 설정이 아직 완료되지 않았어요. 설정 안내 파일을 확인해 주세요.","error");return}
+ try{
+  const [er,ir]=await Promise.all([cloud.from("employees").select("*").order("name"),cloud.from("expenses").select("*").order("created_at")]);
+  if(er.error)throw er.error;if(ir.error)throw ir.error;
+  employees=(er.data||[]).map(x=>({id:x.id,name:x.name,group:x.group_name}));
+  db={};for(const x of ir.data||[]){if(!db[x.day])db[x.day]=[];db[x.day].push({id:x.id,name:x.name,amount:Number(x.amount_thousands),content:x.content,createdAt:new Date(x.created_at).getTime()})}
+  saveDB();render();renderEmployees();setStatus("공유 데이터 연결 완료","ok");
+ }catch(e){setStatus("공유 데이터 연결 오류: "+(e.message||e),"error")}
+}
+async function addCloudExpense(day,name,amount,content){
+ if(!cloud){if(!db[day])db[day]=[];db[day].push({id:uid(),name,amount,content:content||"내용 없음",createdAt:Date.now()});saveDB();return}
+ const {error}=await cloud.from("expenses").insert({day,name,amount_thousands:amount,content:content||"내용 없음"});if(error)throw error;await loadCloud();
+}
+async function updateCloudExpense(day,id,values){
+ if(!cloud){const item=dayItems(day).find(x=>x.id===id);if(item)Object.assign(item,values);saveDB();return}
+ const {error}=await cloud.from("expenses").update({name:values.name,amount_thousands:values.amount,content:values.content}).eq("id",id);if(error)throw error;await loadCloud();
+}
+async function deleteCloudExpense(day,id){
+ if(!cloud){db[day]=dayItems(day).filter(x=>x.id!==id);saveDB();return}
+ const {error}=await cloud.from("expenses").delete().eq("id",id);if(error)throw error;await loadCloud();
+}
+async function deleteCloudDay(day){
+ if(!cloud){delete db[day];saveDB();return}
+ const {error}=await cloud.from("expenses").delete().eq("day",day);if(error)throw error;await loadCloud();
+}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function selectedDay(){return $("day").value||today()}
 function dayItems(day=selectedDay()){return Array.isArray(db[day])?db[day]:[]}
 function fmtWon(thousands){return Math.round(thousands*1000).toLocaleString("ko-KR")+"원"}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function setStatus(msg,type=""){const el=$("status");el.textContent=msg;el.className="status "+type}
-function addItem(name,amount,content,day=selectedDay()){name=name.trim();content=content.trim();amount=Number(amount);if(!name||!Number.isFinite(amount)||amount<0){return false}if(!db[day])db[day]=[];db[day].push({id:uid(),name,amount,content:content||"내용 없음",createdAt:Date.now()});saveDB();return true}
+async function addItem(name,amount,content,day=selectedDay()){name=name.trim();content=content.trim();amount=Number(amount);if(!name||!Number.isFinite(amount)||amount<0){return false}try{await addCloudExpense(day,name,amount,content);return true}catch(e){setStatus("저장 실패: "+(e.message||e),"error");return false}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function render(){
  const items=dayItems().slice(); const map={}; let total=0;
- for(const it of items){if(!map[it.name])map[it.name]={name:it.name,items:[],sum:0};map[it.name].items.push(it);map[it.name].sum+=Number(it.amount);total+=Number(it.amount)}
- const people=Object.values(map).sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+ for(const it of items){const g=groupFor(it.name);if(!map[g])map[g]={people:{},sum:0};if(!map[g].people[it.name])map[g].people[it.name]={name:it.name,items:[],sum:0};map[g].people[it.name].items.push(it);map[g].people[it.name].sum+=Number(it.amount);map[g].sum+=Number(it.amount);total+=Number(it.amount)}
+ const groupOrder=["인트로","퀄리티","ㅋㅋ","기타"];
+ const people=Object.values(map).flatMap(g=>Object.values(g.people));
  $("grandTotal").textContent=fmtWon(total);$("counts").textContent=`${people.length}명 · ${items.length}건`;
  const results=$("results");
  if(!people.length){results.innerHTML='<div class="empty">이 날짜에는 아직 내역이 없습니다.<br>위에서 금액을 입력해 보세요.</div>'}
- else {results.innerHTML=people.map(p=>`<div class="person"><div class="person-head"><strong>${escapeHtml(p.name)}</strong><span class="person-total">${fmtWon(p.sum)}</span></div>${p.items.map(it=>`<div class="item"><div class="item-main"><div class="item-content">${escapeHtml(it.content||"내용 없음")}</div><div class="item-meta">${escapeHtml(it.name)} · ${Number(it.amount).toLocaleString("ko-KR")}천 원</div></div><div class="item-amount">${fmtWon(it.amount)}</div><div class="mini-actions"><button class="soft" data-edit="${it.id}" type="button">수정</button><button class="danger" data-delete="${it.id}" type="button">삭제</button></div></div>`).join("")}</div>`).join("")}
+ else {results.innerHTML=groupOrder.filter(g=>map[g]).map(g=>`<h3 style="margin:18px 0 8px">${g} <span style="font-size:13px;color:var(--muted);font-weight:500">· 소계 ${fmtWon(map[g].sum)}</span></h3>`+Object.values(map[g].people).sort((a,b)=>a.name.localeCompare(b.name,"ko")).map(p=>`<div class="person"><div class="person-head"><strong>${escapeHtml(p.name)}</strong><span class="person-total">${fmtWon(p.sum)}</span></div>${p.items.map(it=>`<div class="item"><div class="item-main"><div class="item-content">${escapeHtml(it.content||"내용 없음")}</div><div class="item-meta">${escapeHtml(it.name)} · ${Number(it.amount).toLocaleString("ko-KR")}천 원</div></div><div class="item-amount">${fmtWon(it.amount)}</div><div class="mini-actions"><button class="soft" data-edit="${it.id}" type="button">수정</button><button class="danger" data-delete="${it.id}" type="button">삭제</button></div></div>`).join("")}</div>`).join("")).join("")}
  const dates=Object.keys(db).filter(d=>Array.isArray(db[d])&&db[d].length).sort((a,b)=>b.localeCompare(a));
  $("savedDates").innerHTML=dates.length?dates.map(d=>`<option value="${d}" ${d===selectedDay()?"selected":""}>${d} (${db[d].length}건)</option>`).join(""):`<option value="${selectedDay()}">${selectedDay()} (내역 없음)</option>`;
 }
+async function renderEmployees(){
+ const el=$("employeeList");if(!el)return;
+ if(!employees.length){el.innerHTML='<div class="empty">등록된 직원이 없습니다.</div>';return}
+ el.innerHTML=employees.map(e=>`<div class="item"><div class="item-main"><strong>${escapeHtml(e.name)}</strong><div class="item-meta">${escapeHtml(e.group)}</div></div><select data-egroup="${e.id}" aria-label="${escapeHtml(e.name)} 소속 변경"><option ${e.group==="인트로"?"selected":""}>인트로</option><option ${e.group==="퀄리티"?"selected":""}>퀄리티</option><option ${e.group==="ㅋㅋ"?"selected":""}>ㅋㅋ</option></select><button class="danger" data-edel="${e.id}" type="button">삭제</button></div>`).join("");
+}
+$("employeeAdd").addEventListener("click",async()=>{
+ const name=$("employeeName").value.trim(),group=$("employeeGroup").value;
+ if(!name){setEmployeeStatus("직원 이름을 입력해 주세요.","error");return}
+ if(!cloud){setEmployeeStatus("공유 데이터베이스 설정을 먼저 완료해야 해요.","error");return}
+ try{const {error}=await cloud.from("employees").upsert({name,group_name:group},{onConflict:"name"});if(error)throw error;$("employeeName").value="";await loadCloud();setEmployeeStatus("직원을 등록했어요. 모든 사용자에게 반영됩니다.","ok")}catch(e){setEmployeeStatus("등록 실패: "+e.message,"error")}
+});
+$("employeeList").addEventListener("change",async e=>{
+ const s=e.target.closest("[data-egroup]");if(!s||!cloud)return;
+ try{const {error}=await cloud.from("employees").update({group_name:s.value}).eq("id",s.dataset.egroup);if(error)throw error;await loadCloud();setEmployeeStatus("소속을 변경했어요.","ok")}catch(err){setEmployeeStatus("변경 실패: "+err.message,"error")}
+});
+$("employeeList").addEventListener("click",async e=>{
+ const b=e.target.closest("[data-edel]");if(!b||!cloud)return;
+ if(!confirm("직원 명부에서 삭제할까요? 기존 정산 내역은 이름 기준으로 기타에 표시됩니다."))return;
+ try{const {error}=await cloud.from("employees").delete().eq("id",b.dataset.edel);if(error)throw error;await loadCloud();setEmployeeStatus("직원을 삭제했어요.","ok")}catch(err){setEmployeeStatus("삭제 실패: "+err.message,"error")}
+});
 function parseLine(line){const m=line.trim().match(/^(\S+)\s+(\d+(?:\.\d+)?)\s*(.*)$/);if(!m)return null;return {name:m[1],amount:Number(m[2]),content:m[3]||""}}
-function addForm(){const ok=addItem($("person").value,$("amount").value,$("content").value);if(!ok){setStatus("이름과 0 이상의 금액을 입력해 주세요.","error");return} $("person").value="";$("amount").value="";$("content").value="";$("person").focus();setStatus("항목을 추가했어요.","ok");render()}
+async function addForm(){const ok=await addItem($("person").value,$("amount").value,$("content").value);if(!ok){setStatus("이름과 0 이상의 금액을 입력해 주세요.","error");return} $("person").value="";$("amount").value="";$("content").value="";$("person").focus();setStatus("항목을 추가했어요.","ok");render()}
 $("addBtn").addEventListener("click",addForm);
 ["person","amount","content"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(id==="content")addForm();else $(id==="person"?"amount":"content").focus()}}));
-$("bulkBtn").addEventListener("click",()=>{const lines=$("bulk").value.split(/\n|[,，]/).map(x=>x.trim()).filter(Boolean);let count=0,bad=[];for(const line of lines){const x=parseLine(line);if(x&&addItem(x.name,x.amount,x.content))count++;else bad.push(line)}render();setStatus(count+"건을 추가했어요."+ (bad.length? " 형식 확인 필요: "+bad.join(" / "):""),bad.length?"error":"ok");if(!bad.length)$("bulk").value=""});
+$("bulkBtn").addEventListener("click",async()=>{const lines=$("bulk").value.split(/\n|[,，]/).map(x=>x.trim()).filter(Boolean);let count=0,bad=[];for(const line of lines){const x=parseLine(line);if(x&&await addItem(x.name,x.amount,x.content))count++;else bad.push(line)}render();setStatus(count+"건을 추가했어요."+ (bad.length? " 형식 확인 필요: "+bad.join(" / "):""),bad.length?"error":"ok");if(!bad.length)$("bulk").value=""});
 $("clearBulk").addEventListener("click",()=>{$("bulk").value=""});
 $("day").value=today();$("day").addEventListener("change",render);$("newDay").addEventListener("click",()=>{$("day").value=today();render()});
-$("results").addEventListener("click",e=>{const del=e.target.closest("[data-delete]");const edit=e.target.closest("[data-edit]");if(del){const id=del.dataset.delete;if(confirm("이 항목을 삭제할까요?")){db[selectedDay()]=dayItems().filter(x=>x.id!==id);saveDB();render();setStatus("항목을 삭제했어요.","ok")}}if(edit){const item=dayItems().find(x=>x.id===edit.dataset.edit);if(!item)return;editId=item.id;$("editPerson").value=item.name;$("editAmount").value=item.amount;$("editContent").value=item.content;$("editDialog").showModal()}});
+$("results").addEventListener("click",async e=>{const del=e.target.closest("[data-delete]");const edit=e.target.closest("[data-edit]");if(del){const id=del.dataset.delete;if(confirm("이 항목을 삭제할까요?")){try{await deleteCloudExpense(selectedDay(),id);render();setStatus("항목을 삭제했어요.","ok")}catch(err){setStatus("삭제 실패: "+err.message,"error")}}}if(edit){const item=dayItems().find(x=>x.id===edit.dataset.edit);if(!item)return;editId=item.id;$("editPerson").value=item.name;$("editAmount").value=item.amount;$("editContent").value=item.content;$("editDialog").showModal()}});
 $("cancelEdit").addEventListener("click",()=>$("editDialog").close());
-$("saveEdit").addEventListener("click",()=>{const name=$("editPerson").value.trim(),amount=Number($("editAmount").value),content=$("editContent").value.trim();if(!name||$("editAmount").value===""||!Number.isFinite(amount)||amount<0){alert("이름과 0 이상의 금액을 확인해 주세요.");return}const item=dayItems().find(x=>x.id===editId);if(item){item.name=name;item.amount=amount;item.content=content||"내용 없음";saveDB();render();setStatus("수정 내용을 저장했어요.","ok")}$("editDialog").close()});
+$("saveEdit").addEventListener("click",async()=>{const name=$("editPerson").value.trim(),amount=Number($("editAmount").value),content=$("editContent").value.trim();if(!name||$("editAmount").value===""||!Number.isFinite(amount)||amount<0){alert("이름과 0 이상의 금액을 확인해 주세요.");return}try{await updateCloudExpense(selectedDay(),editId,{name,amount,content:content||"내용 없음"});render();setStatus("수정 내용을 저장했어요.","ok");$("editDialog").close()}catch(e){setStatus("수정 실패: "+e.message,"error")}});
 function summaryText(){const items=dayItems(),map={};let total=0;items.forEach(it=>{if(!map[it.name])map[it.name]={sum:0,items:[]};map[it.name].sum+=Number(it.amount);map[it.name].items.push(it);total+=Number(it.amount)});const people=Object.keys(map).sort((a,b)=>a.localeCompare(b,"ko"));return [`한눈에 정산 (${selectedDay()})`,"",...people.flatMap(n=>[`${n} 합계: ${fmtWon(map[n].sum)}`,...map[n].items.map(it=>`  ${it.content}: ${fmtWon(it.amount)}`),""]),`전체 합계: ${fmtWon(total)}`].join("\n")}
 $("copyBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(summaryText());setStatus("정산 결과를 복사했어요.","ok")}catch(e){const ta=document.createElement("textarea");ta.value=summaryText();document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();setStatus(ok?"정산 결과를 복사했어요.":"복사할 수 없어요. 브라우저 권한을 확인해 주세요.",ok?"ok":"error")}});
 $("exportBtn").addEventListener("click",()=>{const rows=[["날짜","이름","금액(천원)","금액(원)","내용"],...dayItems().map(it=>[selectedDay(),it.name,it.amount,Math.round(it.amount*1000),it.content])];const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`한눈에정산-${selectedDay()}.csv`;a.click();URL.revokeObjectURL(url)});
-$("clearDayBtn").addEventListener("click",()=>{if(confirm(selectedDay()+" 내역을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.")){delete db[selectedDay()];saveDB();render();setStatus("해당 날짜 내역을 삭제했어요.","ok")}});
+$("clearDayBtn").addEventListener("click",async()=>{if(confirm(selectedDay()+" 내역을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.")){try{await deleteCloudDay(selectedDay());render();setStatus("해당 날짜 내역을 삭제했어요.","ok")}catch(e){setStatus("삭제 실패: "+e.message,"error")}}});
 $("loadDate").addEventListener("click",()=>{if($("savedDates").value){$("day").value=$("savedDates").value;render();setStatus("선택한 날짜 내역을 불러왔어요.","ok")}});
 function parseSpokenNumber(token){
  token=token.replace(/[,，]/g,"").trim();if(/^\d+(?:\.\d+)?$/.test(token))return Number(token);
@@ -162,11 +226,11 @@ $("voiceBtn").addEventListener("click",()=>{
  let finalText="";
  recognition.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t+" ";else interim+=t} $("bulk").value=(finalText+interim).trim();};
  recognition.onerror=e=>{setStatus("음성 인식 오류: "+e.error+". 마이크 권한을 확인해 주세요.","error")};
- recognition.onend=()=>{listening=false;$("voiceBtn").textContent="🎙 음성 입력";if(finalText.trim()){const parsed=parseSpeech(finalText);if(parsed.length){parsed.forEach(x=>addItem(x.name,x.amount,x.content));render();$("bulk").value="";setStatus(parsed.length+"건을 음성으로 추가했어요.","ok")}else{setStatus("음성을 들었지만 항목 형식을 구분하지 못했어요. 입력칸에서 내용을 확인한 뒤 '일괄 입력'을 눌러 주세요.","error")}}};
+ recognition.onend=()=>{listening=false;$("voiceBtn").textContent="🎙 음성 입력";if(finalText.trim()){const parsed=parseSpeech(finalText);if(parsed.length){Promise.all(parsed.map(x=>addItem(x.name,x.amount,x.content))).then(()=>{render();$("bulk").value="";setStatus(parsed.length+"건을 음성으로 추가했어요.","ok")})}else{setStatus("음성을 들었지만 항목 형식을 구분하지 못했어요. 입력칸에서 내용을 확인한 뒤 '일괄 입력'을 눌러 주세요.","error")}}};
  try{recognition.start()}catch(e){listening=false;$("voiceBtn").textContent="🎙 음성 입력";setStatus("음성 인식을 시작하지 못했어요. 다시 시도해 주세요.","error")}
 });
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
-render();
+if(cloudReady){loadCloud();setInterval(loadCloud,20000)}else{db=readDB();render();renderEmployees();setStatus("공유 데이터베이스 설정 전입니다. 안내 파일의 설정을 완료해 주세요.","error")}
 </script>
 </body>
 </html>
