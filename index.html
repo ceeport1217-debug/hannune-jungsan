@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,1167 +7,277 @@
 <title>한눈에 정산</title>
 <style>
 :root {
-  --bg:#f4f6fa;
-  --card:#fff;
-  --text:#202938;
-  --muted:#687386;
-  --line:#e4e8ef;
-  --blue:#245eea;
-  --intro-bg:#e5f1ff;
-  --intro-text:#1855a1;
-  --quality-bg:#e4f7eb;
-  --quality-text:#17683b;
-  --kk-bg:#fff0d9;
-  --kk-text:#965a08;
-  --other-bg:#f0e9ff;
-  --other-text:#6740a3;
+  --bg:#f4f6fa; --card:#fff; --text:#202938; --muted:#687386;
+  --line:#e4e8ef; --blue:#245eea; --intro-bg:#e5f1ff; --intro-text:#1855a1;
+  --quality-bg:#e4f7eb; --quality-text:#17683b; --kk-bg:#fff0d9; --kk-text:#965a08;
+  --other-bg:#f0e9ff; --other-text:#6740a3;
 }
 * { box-sizing:border-box; }
-body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
-    "Noto Sans KR",sans-serif;
-  line-height:1.5;
-}
+body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif; line-height:1.5; }
 button,input,select,textarea { font:inherit; }
-button {
-  cursor:pointer;
-  border:0;
-  border-radius:10px;
-  padding:10px 14px;
-  font-weight:700;
-}
+button { cursor:pointer; border:0; border-radius:10px; padding:10px 14px; font-weight:700; }
 button:disabled { opacity:.5; cursor:not-allowed; }
-input,select,textarea {
-  width:100%;
-  border:1px solid #d7deea;
-  border-radius:10px;
-  padding:11px 12px;
-  background:#fff;
-  color:var(--text);
-  min-width:0;
-}
-input:focus,select:focus,textarea:focus {
-  outline:2px solid #b9cdfd;
-  border-color:var(--blue);
-}
+input,select,textarea { width:100%; border:1px solid #d7deea; border-radius:10px; padding:11px 12px; background:#fff; color:var(--text); min-width:0; }
+input:focus,select:focus,textarea:focus { outline:2px solid #b9cdfd; border-color:var(--blue); }
 textarea { resize:vertical; }
 .app { max-width:850px; margin:0 auto; padding:18px 14px 48px; }
 header { margin:4px 0 18px; }
 h1 { font-size:27px; margin:0 0 5px; letter-spacing:-.7px; }
 .subtitle { font-size:13px; color:var(--muted); }
-.card {
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:17px;
-  padding:17px;
-  margin-bottom:14px;
-  box-shadow:0 3px 12px #15294a08;
-}
-h2 { font-size:17px; margin:0 0 13px; }
-h3 { font-size:15px; margin:0; }
-.field { display:flex; flex-direction:column; gap:6px; }
-.field label { font-size:13px; font-weight:700; color:#475267; }
-.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-.primary { background:var(--blue); color:white; }
-.secondary { background:#edf2ff; color:#244cae; }
-.soft { background:#f0f3f8; color:#465267; }
-.danger { background:#fff0ef; color:#b52d2d; }
-.small { padding:7px 10px; font-size:12px; }
-.full { width:100%; }
-.actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
-.status { margin-top:10px; font-size:13px; color:var(--muted); overflow-wrap:anywhere; }
-.status.ok { color:#187343; }
-.status.error { color:#b42318; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:17px; padding:17px; margin-bottom:14px; box-shadow:0 3px 12px #15294a08; }
+h2 { font-size:17px; margin:0 0 13px; } h3 { font-size:15px; margin:0; }
+.field { display:flex; flex-direction:column; gap:6px; } .field label { font-size:13px; font-weight:700; color:#475267; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.primary { background:var(--blue); color:white; } .secondary { background:#edf2ff; color:#244cae; } .soft { background:#f0f3f8; color:#465267; } .danger { background:#fff0ef; color:#b52d2d; }
+.small { padding:7px 10px; font-size:12px; } .full { width:100%; } .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.status { margin-top:10px; font-size:13px; color:var(--muted); overflow-wrap:anywhere; } .status.ok { color:#187343; } .status.error { color:#b42318; }
 .help { font-size:12px; color:var(--muted); margin-top:6px; }
-.summary {
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:10px;
-  align-items:center;
-  background:#edf3ff;
-  border-radius:13px;
-  padding:15px;
-  margin-bottom:14px;
-}
-.summary-label { font-size:13px; color:#40557d; }
-.total { font-size:25px; font-weight:850; color:#194bb8; }
-.summary-count { font-size:12px; color:var(--muted); text-align:right; }
+.summary { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; background:#edf3ff; border-radius:13px; padding:15px; margin-bottom:14px; }
+.summary-label { font-size:13px; color:#40557d; } .total { font-size:25px; font-weight:850; color:#194bb8; } .summary-count { font-size:12px; color:var(--muted); text-align:right; }
 .date-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; }
-details { border:1px solid var(--line); border-radius:12px; padding:12px; }
-details summary { cursor:pointer; font-weight:750; }
-.employee-tools { margin-top:13px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.employee-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
-.employee-row {
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 125px auto;
-  align-items:center;
-  gap:8px;
-  border:1px solid var(--line);
-  padding:10px;
-  border-radius:11px;
-}
-.employee-name { font-weight:750; overflow-wrap:anywhere; }
-.employee-group-label { color:var(--muted); font-size:12px; }
-.group-section {
-  border:1px solid var(--line);
-  border-radius:13px;
-  overflow:hidden;
-  margin-bottom:13px;
-  background:#fff;
-}
-.group-heading {
-  padding:12px 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.group-heading-left { display:flex; align-items:center; gap:10px; }
-.group-dot { width:10px; height:10px; border-radius:50%; flex:none; }
-.group-name { font-size:15px; font-weight:850; }
-.group-count { font-size:12px; opacity:.8; }
-.group-subtotal { font-weight:850; text-align:right; white-space:nowrap; }
-.group-intro { background:var(--intro-bg); color:var(--intro-text); }
-.group-quality { background:var(--quality-bg); color:var(--quality-text); }
-.group-kk { background:var(--kk-bg); color:var(--kk-text); }
-.group-other { background:var(--other-bg); color:var(--other-text); }
-.group-intro .group-dot { background:var(--intro-text); }
-.group-quality .group-dot { background:var(--quality-text); }
-.group-kk .group-dot { background:var(--kk-text); }
-.group-other .group-dot { background:var(--other-text); }
-.person { padding:12px 13px; border-top:1px solid var(--line); }
-.person-head {
-  display:flex; align-items:center; justify-content:space-between;
-  gap:8px; margin-bottom:5px;
-}
-.person-total { font-size:14px; font-weight:800; white-space:nowrap; }
-.item {
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:8px;
-  padding:9px 0;
-  border-top:1px dashed #e6eaf1;
-}
-.item-main { min-width:0; }
-.item-content { font-size:18px; overflow-wrap:anywhere; }
-.item-meta { font-size:11px; color:var(--muted); margin-top:2px; }
-.item-amount { font-size:13px; font-weight:750; white-space:nowrap; }
-.mini-actions { grid-column:1/-1; display:flex; gap:6px; justify-content:flex-end; }
-.mini-actions button { padding:5px 9px; font-size:11px; }
-.empty { padding:25px 10px; text-align:center; color:var(--muted); font-size:13px; }
-hr { border:0; border-top:1px solid var(--line); margin:16px 0; }
-dialog {
-  border:0; border-radius:16px; padding:20px; width:min(440px,calc(100% - 28px));
-  box-shadow:0 20px 70px #10182835;
-}
-dialog::backdrop { background:#18243c77; }
+details { border:1px solid var(--line); border-radius:12px; padding:12px; } details summary { cursor:pointer; font-weight:750; }
+.employee-tools { margin-top:13px; display:grid; grid-template-columns:1fr 1fr; gap:8px; } .employee-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.employee-row { display:grid; grid-template-columns:minmax(0,1fr) 125px auto; align-items:center; gap:8px; border:1px solid var(--line); padding:10px; border-radius:11px; }
+.employee-name { font-weight:750; overflow-wrap:anywhere; } .employee-group-label { color:var(--muted); font-size:12px; }
+.group-section { border:1px solid var(--line); border-radius:13px; overflow:hidden; margin-bottom:13px; background:#fff; }
+.group-heading { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.group-heading-left { display:flex; align-items:center; gap:10px; } .group-dot { width:10px; height:10px; border-radius:50%; flex:none; }
+.group-name { font-size:15px; font-weight:850; } .group-count { font-size:12px; opacity:.8; } .group-subtotal { font-weight:850; text-align:right; white-space:nowrap; }
+.group-intro { background:var(--intro-bg); color:var(--intro-text); } .group-quality { background:var(--quality-bg); color:var(--quality-text); } .group-kk { background:var(--kk-bg); color:var(--kk-text); } .group-other { background:var(--other-bg); color:var(--other-text); }
+.group-intro .group-dot { background:var(--intro-text); } .group-quality .group-dot { background:var(--quality-text); } .group-kk .group-dot { background:var(--kk-text); } .group-other .group-dot { background:var(--other-text); }
+.person { padding:12px 13px; border-top:1px solid var(--line); } .person-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; }
+.person-total { font-size:14px; font-weight:800; white-space:nowrap; } .item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:9px 0; border-top:1px dashed #e6eaf1; }
+.item-main { min-width:0; } .item-content { font-size:18px; overflow-wrap:anywhere; } .item-meta { font-size:11px; color:var(--muted); margin-top:2px; } .item-amount { font-size:13px; font-weight:750; white-space:nowrap; }
+.mini-actions { grid-column:1/-1; display:flex; gap:6px; justify-content:flex-end; } .mini-actions button { padding:5px 9px; font-size:11px; }
+.empty { padding:25px 10px; text-align:center; color:var(--muted); font-size:13px; } hr { border:0; border-top:1px solid var(--line); margin:16px 0; }
+dialog { border:0; border-radius:16px; padding:20px; width:min(440px,calc(100% - 28px)); box-shadow:0 20px 70px #10182835; } dialog::backdrop { background:#18243c77; }
 .dialog-fields { display:grid; gap:11px; margin-top:14px; }
-@media(max-width:520px) {
-  .app { padding:13px 10px 35px; }
-  .card { padding:13px; }
-  h1 { font-size:24px; }
-  .grid3 { grid-template-columns:1fr 1fr; }
-  .employee-row { grid-template-columns:minmax(0,1fr) auto; }
-  .employee-row select { grid-column:1; }
-  .employee-row button { grid-column:2; grid-row:1/3; }
-  .total { font-size:22px; }
-}
+@media(max-width:520px) { .app { padding:13px 10px 35px; } .card { padding:13px; } h1 { font-size:24px; } .grid3 { grid-template-columns:1fr 1fr; } .employee-row { grid-template-columns:minmax(0,1fr) auto; } .employee-row select { grid-column:1; } .employee-row button { grid-column:2; grid-row:1/3; } .total { font-size:22px; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>📒 한눈에 정산</h1>
-    <div class="subtitle">직원별 내역을 입력하고 그룹별 합계를 확인하세요.</div>
-  </header>
-
+  <header><h1>📒 한눈에 정산</h1><div class="subtitle">직원별 내역을 입력하고 그룹별 합계를 확인하세요.</div></header>
+  <section class="card"><h2>📅 정산 날짜</h2><div class="date-row"><div class="field"><label for="day">날짜 선택</label><input id="day" type="date"></div><button class="secondary" id="newDay" type="button">오늘</button></div></section>
   <section class="card">
-    <h2>📅 정산 날짜</h2>
-    <div class="date-row">
-      <div class="field">
-        <label for="day">날짜 선택</label>
-        <input id="day" type="date">
-      </div>
-      <button class="secondary" id="newDay" type="button">오늘</button>
+    <h2>➕ 정산 항목 입력</h2><div class="grid2">
+      <div class="field"><label for="person">직원 이름</label><input id="person" placeholder="예: 민수" autocomplete="off"></div>
+      <div class="field"><label for="amount">금액 (천 원 단위)</label><input id="amount" type="number" min="0" step="0.1" placeholder="예: 25"></div>
     </div>
+    <div class="field" style="margin-top:10px"><label for="content">세부 내용</label><input id="content" placeholder="예: 점심, 교통비, 식대"></div>
+    <div class="actions"><button class="primary" id="addBtn" type="button">항목 추가</button><button class="secondary" id="voiceBtn" type="button">🎙 음성 입력</button></div>
+    <div class="help">금액은 천 원 단위로 입력하세요. 예: 25 입력 시 25,000원</div><div id="status" class="status" role="status" aria-live="polite"></div>
   </section>
-
+  <section class="card"><h2>📝 여러 항목 한꺼번에 입력</h2><div class="field"><label for="bulk">한 줄에 한 항목씩 입력</label><textarea id="bulk" rows="4" placeholder="민수 25 점심&#10;영희 18 교통비&#10;철수 30 식대"></textarea></div><div class="help">형식: 이름 금액 세부내용. 금액은 천 원 단위입니다.</div><div class="actions"><button class="primary" id="bulkBtn" type="button">일괄 입력</button><button class="soft" id="clearBulk" type="button">입력 지우기</button></div></section>
   <section class="card">
-    <h2>➕ 정산 항목 입력</h2>
-    <div class="grid2">
-      <div class="field">
-        <label for="person">직원 이름</label>
-        <input id="person" placeholder="예: 민수" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="amount">금액 (천 원 단위)</label>
-        <input id="amount" type="number" min="0" step="0.1" placeholder="예: 25">
-      </div>
-    </div>
-    <div class="field" style="margin-top:10px">
-      <label for="content">세부 내용</label>
-      <input id="content" placeholder="예: 점심, 교통비, 식대">
-    </div>
-    <div class="actions">
-      <button class="primary" id="addBtn" type="button">항목 추가</button>
-      <button class="secondary" id="voiceBtn" type="button">🎙 음성 입력</button>
-    </div>
-    <div class="help">금액은 천 원 단위로 입력하세요. 예: 25 입력 시 25,000원</div>
-    <div id="status" class="status" role="status" aria-live="polite"></div>
-  </section>
-
-  <section class="card">
-    <h2>📝 여러 항목 한꺼번에 입력</h2>
-    <div class="field">
-      <label for="bulk">한 줄에 한 항목씩 입력</label>
-      <textarea id="bulk" rows="4" placeholder="민수 25 점심&#10;영희 18 교통비&#10;철수 30 식대"></textarea>
-    </div>
-    <div class="help">형식: 이름 금액 세부내용. 금액은 천 원 단위입니다.</div>
-    <div class="actions">
-      <button class="primary" id="bulkBtn" type="button">일괄 입력</button>
-      <button class="soft" id="clearBulk" type="button">입력 지우기</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>👥 직원 명부</h2>
-    <details id="employeeDetails">
-      <summary>직원 명부 열기 / 접기</summary>
-      <div class="help">직원 소속 그룹을 설정하면 정산 결과에 자동 반영됩니다.</div>
-      <div class="employee-tools">
-        <div class="field">
-          <label for="employeeName">직원 이름</label>
-          <input id="employeeName" placeholder="직원 이름">
-        </div>
-        <div class="field">
-          <label for="employeeGroup">그룹</label>
-          <select id="employeeGroup">
-            <option value="인트로">인트로</option>
-            <option value="퀄리티">퀄리티</option>
-            <option value="ㅋㅋ">ㅋㅋ</option>
-          </select>
-        </div>
-      </div>
-      <button class="primary full" id="employeeAdd" type="button" style="margin-top:9px">직원 등록</button>
-      <div id="employeeStatus" class="status" role="status" aria-live="polite"></div>
-      <div id="employeeList" class="employee-list"></div>
+    <h2>👥 직원 명부</h2><details id="employeeDetails"><summary>직원 명부 열기 / 접기</summary><div class="help">직원 소속 그룹을 설정하면 정산 결과에 자동 반영됩니다.</div>
+      <div class="employee-tools"><div class="field"><label for="employeeName">직원 이름</label><input id="employeeName" placeholder="직원 이름"></div><div class="field"><label for="employeeGroup">그룹</label><select id="employeeGroup"><option value="인트로">인트로</option><option value="퀄리티">퀄리티</option><option value="ㅋㅋ">ㅋㅋ</option></select></div></div>
+      <button class="primary full" id="employeeAdd" type="button" style="margin-top:9px">직원 등록</button><div id="employeeStatus" class="status" role="status" aria-live="polite"></div><div id="employeeList" class="employee-list"></div>
     </details>
   </section>
-
-  <section class="card">
-    <h2>📊 정산 결과</h2>
-    <div class="summary">
-      <div>
-        <div class="summary-label">전체 합계</div>
-        <div class="total" id="grandTotal">0원</div>
-      </div>
-      <div>
-        <div class="summary-count" id="counts">0명 · 0건</div>
-      </div>
-    </div>
-    <div id="results">
-      <div class="empty">내역을 입력하면 여기에 표시됩니다.</div>
-    </div>
-    <div class="actions">
-      <button class="primary" id="copyBtn" type="button">📋 결과 복사</button>
-      <button class="secondary" id="exportBtn" type="button">CSV 내보내기</button>
-      <button class="danger" id="clearDayBtn" type="button">이 날짜 전체 삭제</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>🗂 저장된 날짜</h2>
-    <div class="date-row">
-      <div class="field">
-        <label for="savedDates">저장된 정산 날짜</label>
-        <select id="savedDates"></select>
-      </div>
-      <button class="secondary" id="loadDate" type="button">불러오기</button>
-    </div>
-  </section>
+  <section class="card"><h2>📊 정산 결과</h2><div class="summary"><div><div class="summary-label">전체 합계</div><div class="total" id="grandTotal">0원</div></div><div><div class="summary-count" id="counts">0명 · 0건</div></div></div><div id="results"><div class="empty">내역을 입력하면 여기에 표시됩니다.</div></div><div class="actions"><button class="primary" id="copyBtn" type="button">📋 결과 복사</button><button class="secondary" id="exportBtn" type="button">CSV 내보내기</button><button class="danger" id="clearDayBtn" type="button">이 날짜 전체 삭제</button></div></section>
+  <section class="card"><h2>🗂 저장된 날짜</h2><div class="date-row"><div class="field"><label for="savedDates">저장된 정산 날짜</label><select id="savedDates"></select></div><button class="secondary" id="loadDate" type="button">불러오기</button></div></section>
 </div>
-
-<dialog id="editDialog">
-  <h2>정산 항목 수정</h2>
-  <div class="dialog-fields">
-    <div class="field">
-      <label for="editPerson">직원 이름</label>
-      <input id="editPerson">
-    </div>
-    <div class="field">
-      <label for="editAmount">금액 (천 원 단위)</label>
-      <input id="editAmount" type="number" min="0" step="0.1">
-    </div>
-    <div class="field">
-      <label for="editContent">세부 내용</label>
-      <input id="editContent">
-    </div>
-  </div>
-  <div class="actions">
-    <button class="primary" id="saveEdit" type="button">변경 저장</button>
-    <button class="soft" id="cancelEdit" type="button">취소</button>
-  </div>
-</dialog>
-
+<dialog id="editDialog"><h2>정산 항목 수정</h2><div class="dialog-fields"><div class="field"><label for="editPerson">직원 이름</label><input id="editPerson"></div><div class="field"><label for="editAmount">금액 (천 원 단위)</label><input id="editAmount" type="number" min="0" step="0.1"></div><div class="field"><label for="editContent">세부 내용</label><input id="editContent"></div></div><div class="actions"><button class="primary" id="saveEdit" type="button">변경 저장</button><button class="soft" id="cancelEdit" type="button">취소</button></div></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
 "use strict";
-
 const $ = id => document.getElementById(id);
 const GROUPS = ["인트로", "퀄리티", "ㅋㅋ", "기타"];
-const GROUP_STYLE = {
-  "인트로":"group-intro",
-  "퀄리티":"group-quality",
-  "ㅋㅋ":"group-kk",
-  "기타":"group-other"
-};
-const DBKEY = "hannune-jungsan-v1";
-
+const GROUP_STYLE = {"인트로":"group-intro","퀄리티":"group-quality","ㅋㅋ":"group-kk","기타":"group-other"};
+// 개인 정산용 새 저장 키. 예전 공유 캐시와 섞이지 않도록 버전을 분리함.
+const DBKEY = "hannune-jungsan-personal-v2";
 let db = {};
 let employees = [];
 let editId = null;
 let recognition = null;
 let listening = false;
 
-function today(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
+function today(){const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`;}
+function selectedDay(){return $("day").value || today();}
+function uid(){return "local-" + Date.now() + "-" + Math.random().toString(36).slice(2,9);}
+function fmtWon(thousands){return Math.round((Number(thousands)||0)*1000).toLocaleString("ko-KR")+"원";}
+function escapeHtml(value){return String(value ?? "").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function setStatus(msg,type=""){const el=$("status");el.textContent=msg;el.className="status"+(type?" "+type:"");}
+function setEmployeeStatus(msg,type=""){const el=$("employeeStatus");el.textContent=msg;el.className="status"+(type?" "+type:"");}
+function readDB(){try{const parsed=JSON.parse(localStorage.getItem(DBKEY)||"{}");return parsed&&typeof parsed==="object"?parsed:{};}catch(e){return {};}}
+function saveDB(){try{localStorage.setItem(DBKEY,JSON.stringify(db));}catch(e){console.warn("로컬 저장 실패",e);setStatus("휴대폰 저장 공간 또는 브라우저 설정을 확인해 주세요.","error");}}
+function dayItems(day=selectedDay()){return Array.isArray(db[day])?db[day]:[];}
 
-function selectedDay(){
-  return $("day").value || today();
-}
+function getAppConfig(){if(!window.APP_CONFIG&&window.SUPABASE_CONFIG){window.APP_CONFIG=window.SUPABASE_CONFIG;}return window.APP_CONFIG||{};}
+const APP_CONFIG=getAppConfig();
+const cloudReady=!!(window.supabase&&APP_CONFIG.url&&APP_CONFIG.anonKey&&!String(APP_CONFIG.url).includes("YOUR_")&&!String(APP_CONFIG.anonKey).includes("YOUR_"));
+const cloud=cloudReady?window.supabase.createClient(APP_CONFIG.url,APP_CONFIG.anonKey):null;
 
-function uid(){
-  return "local-" + Date.now() + "-" + Math.random().toString(36).slice(2,9);
-}
+function groupFor(name){const employee=employees.find(e=>e.name===name);return employee&&GROUPS.includes(employee.group)?employee.group:"기타";}
+function buildGroups(items){const groups={};GROUPS.forEach(g=>groups[g]={people:{},sum:0,count:0});for(const it of items){const group=groupFor(it.name);const g=groups[group];if(!g.people[it.name])g.people[it.name]={name:it.name,items:[],sum:0};g.people[it.name].items.push(it);g.people[it.name].sum+=Number(it.amount)||0;g.sum+=Number(it.amount)||0;g.count++;}return groups;}
 
-function fmtWon(thousands){
-  return Math.round((Number(thousands)||0)*1000).toLocaleString("ko-KR")+"원";
-}
-
-function escapeHtml(value){
-  return String(value ?? "").replace(/[&<>"']/g, ch => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[ch]);
-}
-
-function setStatus(msg,type=""){
-  const el=$("status");
-  el.textContent=msg;
-  el.className="status"+(type?" "+type:"");
-}
-
-function setEmployeeStatus(msg,type=""){
-  const el=$("employeeStatus");
-  el.textContent=msg;
-  el.className="status"+(type?" "+type:"");
-}
-
-function readDB(){
-  try{
-    const parsed=JSON.parse(localStorage.getItem(DBKEY)||"{}");
-    return parsed && typeof parsed==="object" ? parsed : {};
-  }catch(e){
-    return {};
-  }
-}
-
-function saveDB(){
-  try{
-    localStorage.setItem(DBKEY,JSON.stringify(db));
-  }catch(e){
-    console.warn("로컬 저장 실패",e);
-  }
-}
-
-function dayItems(day=selectedDay()){
-  return Array.isArray(db[day]) ? db[day] : [];
-}
-
-/* config.js의 설정 이름을 확인해 Supabase 연결 */
-function getAppConfig(){
-  if(!window.APP_CONFIG && window.SUPABASE_CONFIG){
-    window.APP_CONFIG = window.SUPABASE_CONFIG;
-  }
-  return window.APP_CONFIG || {};
-}
-
-const APP_CONFIG = getAppConfig();
-const cloudReady = !!(
-  window.supabase &&
-  APP_CONFIG.url &&
-  APP_CONFIG.anonKey &&
-  !String(APP_CONFIG.url).includes("YOUR_") &&
-  !String(APP_CONFIG.anonKey).includes("YOUR_")
-);
-
-const cloud = cloudReady
-  ? window.supabase.createClient(APP_CONFIG.url,APP_CONFIG.anonKey)
-  : null;
-
-function groupFor(name){
-  const employee=employees.find(e=>e.name===name);
-  return employee && GROUPS.includes(employee.group)
-    ? employee.group
-    : "기타";
-}
-
-function buildGroups(items){
-  const groups={};
-  GROUPS.forEach(g=>groups[g]={people:{},sum:0,count:0});
-
-  for(const it of items){
-    const group=groupFor(it.name);
-    const g=groups[group];
-    if(!g.people[it.name]){
-      g.people[it.name]={name:it.name,items:[],sum:0};
-    }
-    g.people[it.name].items.push(it);
-    g.people[it.name].sum+=Number(it.amount)||0;
-    g.sum+=Number(it.amount)||0;
-    g.count++;
-  }
-  return groups;
-}
-
-/* 로컬 저장소 또는 Supabase에서 불러오기 */
+/* 직원 명부만 Supabase에서 공유. 정산 내역은 이 휴대폰의 localStorage만 사용. */
 async function loadCloud(){
-  if(!cloud){
-    db=readDB();
-    employees=[];
-    render();
-    renderEmployees();
-    setStatus("로컬 저장 모드입니다. 공유 기능을 사용하려면 config.js와 Supabase 설정을 확인하세요.","error");
-    return;
-  }
-
+  db=readDB();
+  if(!cloud){employees=[];render();renderEmployees();setStatus("개인 정산 저장 모드입니다. 직원 명부 공유를 위해 config.js와 Supabase 연결을 확인하세요.","error");return;}
   try{
-    const [er,ir]=await Promise.all([
-      cloud.from("employees").select("*").order("name"),
-      cloud.from("expenses").select("*").order("created_at")
-    ]);
-
-    if(er.error)throw er.error;
-    if(ir.error)throw ir.error;
-
-    employees=(er.data||[]).map(x=>({
-      id:x.id,
-      name:x.name,
-      group:x.group_name || "기타"
-    }));
-
-    db={};
-    for(const x of ir.data||[]){
-      if(!db[x.day])db[x.day]=[];
-      db[x.day].push({
-        id:x.id,
-        name:x.name,
-        amount:Number(x.amount_thousands),
-        content:x.content||"",
-        createdAt:x.created_at ? new Date(x.created_at).getTime() : Date.now()
-      });
-    }
-
-    saveDB();
-    render();
-    renderEmployees();
-    setStatus("공유 데이터베이스 연결 완료","ok");
-  }catch(e){
-    console.error(e);
-    db=readDB();
-    render();
-    renderEmployees();
-    setStatus("공유 데이터 연결 오류: "+(e.message||e),"error");
-  }
+    const {data,error}=await cloud.from("employees").select("*").order("name");
+    if(error)throw error;
+    employees=(data||[]).map(x=>({id:x.id,name:x.name,group:x.group_name||"기타"}));
+    render();renderEmployees();
+    setStatus("직원 명부 공유 연결 완료 · 정산 내역은 이 휴대폰에만 저장됩니다.","ok");
+  }catch(e){console.error(e);render();renderEmployees();setStatus("직원 명부 연결 오류: "+(e.message||e),"error");}
 }
+async function addCloudExpense(day,name,amount,content){if(!Array.isArray(db[day]))db[day]=[];db[day].push({id:uid(),name,amount:Number(amount),content:content||"내용 없음",createdAt:Date.now()});saveDB();}
+async function updateCloudExpense(day,id,values){const item=(Array.isArray(db[day])?db[day]:[]).find(x=>String(x.id)===String(id));if(!item)throw new Error("수정할 항목을 찾을 수 없습니다.");Object.assign(item,values);saveDB();}
+async function deleteCloudExpense(day,id){db[day]=(Array.isArray(db[day])?db[day]:[]).filter(x=>String(x.id)!==String(id));if(!db[day].length)delete db[day];saveDB();}
+async function deleteCloudDay(day){delete db[day];saveDB();}
 
-async function addCloudExpense(day,name,amount,content){
-  if(!cloud){
-    if(!db[day])db[day]=[];
-    db[day].push({
-      id:uid(),name,amount,content:content||"내용 없음",createdAt:Date.now()
-    });
-    saveDB();
-    return;
-  }
-
-  const {error}=await cloud.from("expenses").insert({
-    day,
-    name,
-    amount_thousands:amount,
-    content:content||"내용 없음"
-  });
-
-  if(error)throw error;
-  await loadCloud();
-}
-
-async function updateCloudExpense(day,id,values){
-  if(!cloud){
-    const item=dayItems(day).find(x=>String(x.id)===String(id));
-    if(item)Object.assign(item,values);
-    saveDB();
-    return;
-  }
-
-  const {error}=await cloud.from("expenses").update({
-    name:values.name,
-    amount_thousands:values.amount,
-    content:values.content
-  }).eq("id",id);
-
-  if(error)throw error;
-  await loadCloud();
-}
-
-async function deleteCloudExpense(day,id){
-  if(!cloud){
-    db[day]=dayItems(day).filter(x=>String(x.id)!==String(id));
-    saveDB();
-    return;
-  }
-
-  const {error}=await cloud.from("expenses").delete().eq("id",id);
-  if(error)throw error;
-  await loadCloud();
-}
-
-async function deleteCloudDay(day){
-  if(!cloud){
-    delete db[day];
-    saveDB();
-    return;
-  }
-
-  const {error}=await cloud.from("expenses").delete().eq("day",day);
-  if(error)throw error;
-  await loadCloud();
-}
-
-/* 결과 화면: 그룹별 색상, 소계, 직원별 합계 */
 function render(){
-  const items=dayItems().slice();
-  const groups=buildGroups(items);
-  const people=new Set(items.map(x=>x.name));
-  const total=items.reduce((s,x)=>s+(Number(x.amount)||0),0);
-
-  $("grandTotal").textContent=fmtWon(total);
-  $("counts").textContent=`${people.size}명 · ${items.length}건`;
-
-  if(!items.length){
-    $("results").innerHTML='<div class="empty">이 날짜에는 아직 내역이 없습니다.<br>위에서 금액을 입력해 보세요.</div>';
-  }else{
+  const items=dayItems().slice();const groups=buildGroups(items);const people=new Set(items.map(x=>x.name));const total=items.reduce((s,x)=>s+(Number(x.amount)||0),0);
+  $("grandTotal").textContent=fmtWon(total);$("counts").textContent=`${people.size}명 · ${items.length}건`;
+  if(!items.length){$("results").innerHTML='<div class="empty">이 날짜에는 아직 내역이 없습니다.<br>위에서 금액을 입력해 보세요.</div>';}
+  else{
     $("results").innerHTML=GROUPS.filter(g=>groups[g].count>0).map(g=>{
       const data=groups[g];
-      const peopleHtml=Object.values(data.people)
-        .sort((a,b)=>a.name.localeCompare(b.name,"ko"))
-        .map(p=>`
-          <div class="person">
-            <div class="person-head">
-              <strong>${escapeHtml(p.name)}</strong>
-              <span class="person-total">${fmtWon(p.sum)}</span>
-            </div>
-            ${p.items.map(it=>`
-              <div class="item">
-                <div class="item-main">
-                  <div class="item-content">${escapeHtml(it.content||"내용 없음")}</div>
-                  <div class="item-meta">${Number(it.amount).toLocaleString("ko-KR")}천 원</div>
-                </div>
-                <div class="item-amount">${fmtWon(it.amount)}</div>
-                <div class="mini-actions">
-                  <button class="soft" data-edit="${escapeHtml(it.id)}" type="button">수정</button>
-                  <button class="danger" data-delete="${escapeHtml(it.id)}" type="button">삭제</button>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        `).join("");
-
-      return `
-        <section class="group-section">
-          <div class="group-heading ${GROUP_STYLE[g]}">
-            <div class="group-heading-left">
-              <span class="group-dot"></span>
-              <div>
-                <div class="group-name">${g}</div>
-                <div class="group-count">${Object.keys(data.people).length}명 · ${data.count}건</div>
-              </div>
-            </div>
-            <div class="group-subtotal">${fmtWon(data.sum)}</div>
-          </div>
-          ${peopleHtml}
-        </section>`;
+      const peopleHtml=Object.values(data.people).sort((a,b)=>a.name.localeCompare(b.name,"ko")).map(p=>`
+        <div class="person"><div class="person-head"><strong>${escapeHtml(p.name)}</strong><span class="person-total">${fmtWon(p.sum)}</span></div>
+        ${p.items.map(it=>`<div class="item"><div class="item-main"><div class="item-content">${escapeHtml(it.content||"내용 없음")}</div><div class="item-meta">${Number(it.amount).toLocaleString("ko-KR")}천 원</div></div><div class="item-amount">${fmtWon(it.amount)}</div><div class="mini-actions"><button class="soft" data-edit="${escapeHtml(it.id)}" type="button">수정</button><button class="danger" data-delete="${escapeHtml(it.id)}" type="button">삭제</button></div></div>`).join("")}
+        </div>`).join("");
+      return `<section class="group-section"><div class="group-heading ${GROUP_STYLE[g]}"><div class="group-heading-left"><span class="group-dot"></span><div><div class="group-name">${g}</div><div class="group-count">${Object.keys(data.people).length}명 · ${data.count}건</div></div></div><div class="group-subtotal">${fmtWon(data.sum)}</div></div>${peopleHtml}</section>`;
     }).join("");
   }
-
-  const dates=Object.keys(db)
-    .filter(d=>Array.isArray(db[d])&&db[d].length)
-    .sort((a,b)=>b.localeCompare(a));
-
-  $("savedDates").innerHTML=dates.length
-    ? dates.map(d=>`<option value="${escapeHtml(d)}" ${d===selectedDay()?"selected":""}>${escapeHtml(d)} (${db[d].length}건)</option>`).join("")
-    : `<option value="${escapeHtml(selectedDay())}">${escapeHtml(selectedDay())} (내역 없음)</option>`;
+  const dates=Object.keys(db).filter(d=>Array.isArray(db[d])&&db[d].length).sort((a,b)=>b.localeCompare(a));
+  $("savedDates").innerHTML=dates.length?dates.map(d=>`<option value="${escapeHtml(d)}" ${d===selectedDay()?"selected":""}>${escapeHtml(d)} (${db[d].length}건)</option>`).join(""):`<option value="${escapeHtml(selectedDay())}">${escapeHtml(selectedDay())} (내역 없음)</option>`;
 }
 
-/* 직원 명부 */
 function renderEmployees(){
   const el=$("employeeList");
-  if(!employees.length){
-    el.innerHTML='<div class="empty">등록된 직원이 없습니다.</div>';
-    return;
-  }
-
-  el.innerHTML=employees
-    .slice()
-    .sort((a,b)=>a.name.localeCompare(b.name,"ko"))
-    .map(e=>`
-      <div class="employee-row">
-        <div>
-          <div class="employee-name">${escapeHtml(e.name)}</div>
-          <div class="employee-group-label">현재 소속: ${escapeHtml(e.group)}</div>
-        </div>
-        <select data-egroup="${escapeHtml(e.id)}" aria-label="${escapeHtml(e.name)} 소속 변경">
-          ${["인트로","퀄리티","ㅋㅋ"].map(g=>
-            `<option value="${g}" ${e.group===g?"selected":""}>${g}</option>`
-          ).join("")}
-        </select>
-        <button class="danger small" data-edel="${escapeHtml(e.id)}" type="button">삭제</button>
-      </div>
-    `).join("");
+  if(!employees.length){el.innerHTML='<div class="empty">등록된 직원이 없습니다.</div>';return;}
+  el.innerHTML=employees.slice().sort((a,b)=>a.name.localeCompare(b.name,"ko")).map(e=>`
+    <div class="employee-row"><div><div class="employee-name">${escapeHtml(e.name)}</div><div class="employee-group-label">현재 소속: ${escapeHtml(e.group)}</div></div>
+    <select data-egroup="${escapeHtml(e.id)}" aria-label="${escapeHtml(e.name)} 소속 변경">${["인트로","퀄리티","ㅋㅋ"].map(g=>`<option value="${g}" ${e.group===g?"selected":""}>${g}</option>`).join("")}</select>
+    <button class="danger small" data-edel="${escapeHtml(e.id)}" type="button">삭제</button></div>`).join("");
 }
 
 $("employeeAdd").addEventListener("click",async()=>{
-  const name=$("employeeName").value.trim();
-  const group=$("employeeGroup").value;
-
-  if(!name){
-    setEmployeeStatus("직원 이름을 입력해 주세요.","error");
-    return;
-  }
-
-  if(!cloud){
-    setEmployeeStatus("직원 명부 공유 기능은 Supabase 연결이 필요합니다.","error");
-    return;
-  }
-
-  try{
-    const {error}=await cloud.from("employees").upsert(
-      {name,group_name:group},
-      {onConflict:"name"}
-    );
-    if(error)throw error;
-
-    $("employeeName").value="";
-    await loadCloud();
-    setEmployeeStatus("직원을 등록했어요.","ok");
-  }catch(e){
-    setEmployeeStatus("등록 실패: "+e.message,"error");
-  }
+  const name=$("employeeName").value.trim();const group=$("employeeGroup").value;
+  if(!name){setEmployeeStatus("직원 이름을 입력해 주세요.","error");return;}
+  if(!cloud){setEmployeeStatus("직원 명부 공유 기능은 Supabase 연결이 필요합니다.","error");return;}
+  try{const {error}=await cloud.from("employees").upsert({name,group_name:group},{onConflict:"name"});if(error)throw error;$("employeeName").value="";await loadCloud();setEmployeeStatus("직원을 등록했어요.","ok");}
+  catch(e){setEmployeeStatus("등록 실패: "+e.message,"error");}
 });
-
 $("employeeList").addEventListener("change",async e=>{
-  const s=e.target.closest("[data-egroup]");
-  if(!s)return;
-  if(!cloud){
-    setEmployeeStatus("공유 데이터베이스 연결이 필요합니다.","error");
-    return;
-  }
-
-  try{
-    const {error}=await cloud.from("employees")
-      .update({group_name:s.value}).eq("id",s.dataset.egroup);
-    if(error)throw error;
-
-    await loadCloud();
-    setEmployeeStatus("직원 소속을 변경했어요.","ok");
-  }catch(err){
-    setEmployeeStatus("변경 실패: "+err.message,"error");
-  }
+  const s=e.target.closest("[data-egroup]");if(!s)return;
+  if(!cloud){setEmployeeStatus("공유 데이터베이스 연결이 필요합니다.","error");return;}
+  try{const {error}=await cloud.from("employees").update({group_name:s.value}).eq("id",s.dataset.egroup);if(error)throw error;await loadCloud();setEmployeeStatus("직원 소속을 변경했어요.","ok");}
+  catch(err){setEmployeeStatus("변경 실패: "+err.message,"error");}
 });
-
 $("employeeList").addEventListener("click",async e=>{
-  const b=e.target.closest("[data-edel]");
-  if(!b)return;
-
-  if(!cloud){
-    setEmployeeStatus("공유 데이터베이스 연결이 필요합니다.","error");
-    return;
-  }
-
+  const b=e.target.closest("[data-edel]");if(!b)return;
+  if(!cloud){setEmployeeStatus("공유 데이터베이스 연결이 필요합니다.","error");return;}
   if(!confirm("직원 명부에서 삭제할까요? 기존 정산 내역은 기타 그룹으로 표시됩니다."))return;
-
-  try{
-    const {error}=await cloud.from("employees").delete().eq("id",b.dataset.edel);
-    if(error)throw error;
-
-    await loadCloud();
-    setEmployeeStatus("직원을 삭제했어요.","ok");
-  }catch(err){
-    setEmployeeStatus("삭제 실패: "+err.message,"error");
-  }
+  try{const {error}=await cloud.from("employees").delete().eq("id",b.dataset.edel);if(error)throw error;await loadCloud();setEmployeeStatus("직원을 삭제했어요.","ok");}
+  catch(err){setEmployeeStatus("삭제 실패: "+err.message,"error");}
 });
 
-/* 정산 입력 */
 async function addItem(name,amount,content,day=selectedDay()){
-  name=String(name||"").trim();
-  content=String(content||"").trim();
-
+  name=String(name||"").trim();content=String(content||"").trim();
   if(!name||amount===""||amount===null||amount===undefined)return false;
-  amount=Number(amount);
-  if(!Number.isFinite(amount)||amount<0)return false;
-
-  try{
-    await addCloudExpense(day,name,amount,content);
-    return true;
-  }catch(e){
-    setStatus("저장 실패: "+(e.message||e),"error");
-    return false;
-  }
+  amount=Number(amount);if(!Number.isFinite(amount)||amount<0)return false;
+  try{await addCloudExpense(day,name,amount,content);return true;}
+  catch(e){setStatus("저장 실패: "+(e.message||e),"error");return false;}
 }
-
 async function addForm(){
-  const name=$("person").value.trim();
-  const amount=$("amount").value;
-  const content=$("content").value.trim();
-
-  if(!name||amount===""){
-    setStatus("이름과 금액을 입력해 주세요.","error");
-    return;
-  }
-
-  const ok=await addItem(name,amount,content);
-  if(!ok)return;
-
-  $("person").value="";
-  $("amount").value="";
-  $("content").value="";
-  $("person").focus();
-  render();
-  setStatus("항목을 추가했어요.","ok");
+  const name=$("person").value.trim();const amount=$("amount").value;const content=$("content").value.trim();
+  if(!name||amount===""){setStatus("이름과 금액을 입력해 주세요.","error");return;}
+  const ok=await addItem(name,amount,content);if(!ok)return;
+  $("person").value="";$("amount").value="";$("content").value="";$("person").focus();render();setStatus("항목을 추가했어요.","ok");
 }
-
 $("addBtn").addEventListener("click",addForm);
-
-$("content").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    addForm();
-  }
-});
-
-$("person").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    $("amount").focus();
-  }
-});
-
-$("amount").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    $("content").focus();
-  }
-});
-
-function parseLine(line){
-  const m=line.trim().match(/^(\S+)\s+(\d+(?:\.\d+)?)\s*(.*)$/);
-  if(!m)return null;
-  return {name:m[1],amount:Number(m[2]),content:m[3]||""};
-}
-
+$("content").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addForm();}});
+$("person").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("amount").focus();}});
+$("amount").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("content").focus();}});
+function parseLine(line){const m=line.trim().match(/^(\S+)\s+(\d+(?:\.\d+)?)\s*(.*)$/);if(!m)return null;return {name:m[1],amount:Number(m[2]),content:m[3]||""};}
 $("bulkBtn").addEventListener("click",async()=>{
-  const lines=$("bulk").value
-    .split(/\n|[,，]/)
-    .map(x=>x.trim())
-    .filter(Boolean);
-
-  if(!lines.length){
-    setStatus("일괄 입력할 내용을 적어 주세요.","error");
-    return;
-  }
-
-  let count=0;
-  const bad=[];
-
-  for(const line of lines){
-    const x=parseLine(line);
-    if(x && await addItem(x.name,x.amount,x.content)){
-      count++;
-    }else{
-      bad.push(line);
-    }
-  }
-
-  render();
-  setStatus(
-    `${count}건을 추가했어요.`+(bad.length?" 확인이 필요한 항목: "+bad.join(" / "):""),
-    bad.length?"error":"ok"
-  );
-
+  const lines=$("bulk").value.split(/\n|[,，]/).map(x=>x.trim()).filter(Boolean);
+  if(!lines.length){setStatus("일괄 입력할 내용을 적어 주세요.","error");return;}
+  let count=0;const bad=[];
+  for(const line of lines){const x=parseLine(line);if(x&&await addItem(x.name,x.amount,x.content))count++;else bad.push(line);}
+  render();setStatus(`${count}건을 추가했어요.`+(bad.length?" 확인이 필요한 항목: "+bad.join(" / "):""),bad.length?"error":"ok");
   if(!bad.length)$("bulk").value="";
 });
-
 $("clearBulk").addEventListener("click",()=>{$("bulk").value="";});
+$("day").value=today();$("day").addEventListener("change",render);
+$("newDay").addEventListener("click",()=>{$("day").value=today();render();});
 
-$("day").value=today();
-$("day").addEventListener("change",render);
-
-$("newDay").addEventListener("click",()=>{
-  $("day").value=today();
-  render();
-});
-
-/* 항목 수정 및 삭제 */
 $("results").addEventListener("click",async e=>{
-  const del=e.target.closest("[data-delete]");
-  const edit=e.target.closest("[data-edit]");
-
-  if(del){
-    if(!confirm("이 항목을 삭제할까요?"))return;
-
-    try{
-      await deleteCloudExpense(selectedDay(),del.dataset.delete);
-      render();
-      setStatus("항목을 삭제했어요.","ok");
-    }catch(err){
-      setStatus("삭제 실패: "+err.message,"error");
-    }
-  }
-
-  if(edit){
-    const item=dayItems().find(x=>String(x.id)===String(edit.dataset.edit));
-    if(!item)return;
-
-    editId=item.id;
-    $("editPerson").value=item.name;
-    $("editAmount").value=item.amount;
-    $("editContent").value=item.content||"";
-    $("editDialog").showModal();
-  }
+  const del=e.target.closest("[data-delete]");const edit=e.target.closest("[data-edit]");
+  if(del){if(!confirm("이 항목을 삭제할까요?"))return;try{await deleteCloudExpense(selectedDay(),del.dataset.delete);render();setStatus("항목을 삭제했어요.","ok");}catch(err){setStatus("삭제 실패: "+err.message,"error");}}
+  if(edit){const item=dayItems().find(x=>String(x.id)===String(edit.dataset.edit));if(!item)return;editId=item.id;$("editPerson").value=item.name;$("editAmount").value=item.amount;$("editContent").value=item.content||"";$("editDialog").showModal();}
 });
-
 $("cancelEdit").addEventListener("click",()=>$("editDialog").close());
-
 $("saveEdit").addEventListener("click",async()=>{
-  const name=$("editPerson").value.trim();
-  const rawAmount=$("editAmount").value;
-  const amount=Number(rawAmount);
-  const content=$("editContent").value.trim();
-
-  if(!name||rawAmount===""||!Number.isFinite(amount)||amount<0){
-    alert("이름과 0 이상의 금액을 확인해 주세요.");
-    return;
-  }
-
-  try{
-    await updateCloudExpense(selectedDay(),editId,{
-      name,amount,content:content||"내용 없음"
-    });
-
-    render();
-    $("editDialog").close();
-    setStatus("수정 내용을 저장했어요.","ok");
-  }catch(e){
-    setStatus("수정 실패: "+e.message,"error");
-  }
+  const name=$("editPerson").value.trim();const rawAmount=$("editAmount").value;const amount=Number(rawAmount);const content=$("editContent").value.trim();
+  if(!name||rawAmount===""||!Number.isFinite(amount)||amount<0){alert("이름과 0 이상의 금액을 확인해 주세요.");return;}
+  try{await updateCloudExpense(selectedDay(),editId,{name,amount,content:content||"내용 없음"});render();$("editDialog").close();setStatus("수정 내용을 저장했어요.","ok");}
+  catch(e){setStatus("수정 실패: "+e.message,"error");}
 });
 
-/* 그룹별 소계, 직원별 합계, 상세 내역을 포함한 복사 */
 function summaryText(){
-  const items=dayItems();
-  const groups=buildGroups(items);
-  const lines=[
-    "한눈에 정산",
-    "날짜: "+selectedDay(),
-    "================================"
-  ];
-
-  for(const g of GROUPS){
-    const data=groups[g];
-
-    lines.push("");
-    lines.push("【"+g+"】");
-    lines.push("그룹 소계: "+fmtWon(data.sum));
-
-    const people=Object.values(data.people)
-      .sort((a,b)=>a.name.localeCompare(b.name,"ko"));
-
-    if(!people.length){
-      lines.push("내역 없음");
-      continue;
-    }
-
-    for(const p of people){
-      lines.push("");
-      lines.push("  "+p.name+" 합계: "+fmtWon(p.sum));
-
-      for(const it of p.items){
-        lines.push("    - "+(it.content||"내용 없음")+": "+fmtWon(it.amount));
-      }
-    }
-  }
-
-  const total=items.reduce((s,it)=>s+(Number(it.amount)||0),0);
-  lines.push("");
-  lines.push("================================");
-  lines.push("전체 합계: "+fmtWon(total));
-  lines.push("전체 항목: "+items.length+"건");
-
-  return lines.join("\n");
+  const items=dayItems();const groups=buildGroups(items);const lines=["한눈에 정산","날짜: "+selectedDay(),"================================"];
+  for(const g of GROUPS){const data=groups[g];lines.push("","【"+g+"】","그룹 소계: "+fmtWon(data.sum));const people=Object.values(data.people).sort((a,b)=>a.name.localeCompare(b.name,"ko"));if(!people.length){lines.push("내역 없음");continue;}for(const p of people){lines.push("","  "+p.name+" 합계: "+fmtWon(p.sum));for(const it of p.items)lines.push("    - "+(it.content||"내용 없음")+": "+fmtWon(it.amount));}}
+  const total=items.reduce((s,it)=>s+(Number(it.amount)||0),0);lines.push("","================================","전체 합계: "+fmtWon(total),"전체 항목: "+items.length+"건");return lines.join("\n");
 }
-
 $("copyBtn").addEventListener("click",async()=>{
-  const text=summaryText();
-
-  try{
-    await navigator.clipboard.writeText(text);
-    setStatus("그룹별 정산 결과를 복사했어요.","ok");
-  }catch(e){
-    const ta=document.createElement("textarea");
-    ta.value=text;
-    ta.style.position="fixed";
-    ta.style.left="-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-
-    let ok=false;
-    try{ok=document.execCommand("copy");}catch(err){}
-
-    ta.remove();
-    setStatus(
-      ok?"그룹별 정산 결과를 복사했어요.":"복사에 실패했어요. 브라우저 권한을 확인해 주세요.",
-      ok?"ok":"error"
-    );
-  }
+  const text=summaryText();try{await navigator.clipboard.writeText(text);setStatus("그룹별 정산 결과를 복사했어요.","ok");}
+  catch(e){const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(err){}ta.remove();setStatus(ok?"그룹별 정산 결과를 복사했어요.":"복사에 실패했어요. 브라우저 권한을 확인해 주세요.",ok?"ok":"error");}
 });
-
-/* CSV 파일 내보내기 */
 $("exportBtn").addEventListener("click",()=>{
-  const rows=[
-    ["날짜","그룹","이름","금액(천원)","금액(원)","내용"],
-    ...dayItems().map(it=>[
-      selectedDay(),
-      groupFor(it.name),
-      it.name,
-      it.amount,
-      Math.round((Number(it.amount)||0)*1000),
-      it.content||"내용 없음"
-    ])
-  ];
-
-  const csv="\uFEFF"+rows.map(row=>
-    row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")
-  ).join("\r\n");
-
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-
-  a.href=url;
-  a.download=`한눈에정산-${selectedDay()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const rows=[["날짜","그룹","이름","금액(천원)","금액(원)","내용"],...dayItems().map(it=>[selectedDay(),groupFor(it.name),it.name,it.amount,Math.round((Number(it.amount)||0)*1000),it.content||"내용 없음"])];
+  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`한눈에정산-${selectedDay()}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
-
-/* 선택 날짜의 모든 항목 삭제 */
 $("clearDayBtn").addEventListener("click",async()=>{
-  if(!dayItems().length){
-    setStatus("삭제할 항목이 없습니다.");
-    return;
-  }
-
+  if(!dayItems().length){setStatus("삭제할 항목이 없습니다.");return;}
   if(!confirm(selectedDay()+"의 모든 정산 내역을 삭제할까요? 이 작업은 되돌릴 수 없습니다."))return;
-
-  try{
-    await deleteCloudDay(selectedDay());
-    render();
-    setStatus("해당 날짜의 내역을 삭제했어요.","ok");
-  }catch(e){
-    setStatus("삭제 실패: "+e.message,"error");
-  }
+  try{await deleteCloudDay(selectedDay());render();setStatus("해당 날짜의 내역을 삭제했어요.","ok");}
+  catch(e){setStatus("삭제 실패: "+e.message,"error");}
 });
+$("loadDate").addEventListener("click",()=>{const d=$("savedDates").value;if(!d)return;$("day").value=d;render();setStatus("선택한 날짜 내역을 불러왔어요.","ok");});
 
-$("loadDate").addEventListener("click",()=>{
-  const d=$("savedDates").value;
-  if(!d)return;
-
-  $("day").value=d;
-  render();
-  setStatus("선택한 날짜 내역을 불러왔어요.","ok");
-});
-
-/* 음성 입력 */
 function parseSpokenNumber(token){
-  token=token.replace(/[,，]/g,"").trim();
-  if(/^\d+(?:\.\d+)?$/.test(token))return Number(token);
-
-  const digit={
-    "영":0,"공":0,"일":1,"이":2,"삼":3,"사":4,
-    "오":5,"육":6,"륙":6,"칠":7,"팔":8,"구":9
-  };
-
-  if(/[만천백십]/.test(token)){
-    let total=0,section=0,num=0;
-
-    for(const ch of token){
-      if(ch in digit){
-        num=digit[ch];
-      }else if(ch==="십"){
-        section+=(num||1)*10;
-        num=0;
-      }else if(ch==="백"){
-        section+=(num||1)*100;
-        num=0;
-      }else if(ch==="천"){
-        section+=(num||1)*1000;
-        num=0;
-      }else if(ch==="만"){
-        total+=(section+num||1)*10000;
-        section=0;
-        num=0;
-      }else{
-        return null;
-      }
-    }
-    return total+section+num;
-  }
-
-  let n=0;
-  for(const ch of token){
-    if(ch in digit)n=n*10+digit[ch];
-    else return null;
-  }
-  return n;
+  token=token.replace(/[,，]/g,"").trim();if(/^\d+(?:\.\d+)?$/.test(token))return Number(token);
+  const digit={"영":0,"공":0,"일":1,"이":2,"삼":3,"사":4,"오":5,"육":6,"륙":6,"칠":7,"팔":8,"구":9};
+  if(/[만천백십]/.test(token)){let total=0,section=0,num=0;for(const ch of token){if(ch in digit)num=digit[ch];else if(ch==="십"){section+=(num||1)*10;num=0;}else if(ch==="백"){section+=(num||1)*100;num=0;}else if(ch==="천"){section+=(num||1)*1000;num=0;}else if(ch==="만"){total+=(section+num||1)*10000;section=0;num=0;}else return null;}return total+section+num;}
+  let n=0;for(const ch of token){if(ch in digit)n=n*10+digit[ch];else return null;}return n;
 }
-
 function parseSpeech(text){
-  const chunks=text.replace(/[。;]/g,",")
-    .split(/[,，\n]+/)
-    .map(s=>s.trim())
-    .filter(Boolean);
-
-  const out=[];
-
-  for(const chunk of chunks){
-    let m=chunk.match(/^(\S+?)\s+([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);
-
-    if(m){
-      out.push({name:m[1],amount:Number(m[2]),content:m[3]||""});
-      continue;
-    }
-
-    m=chunk.match(/^(\S+?)\s+(\S+)\s*(.*)$/);
-
-    if(m){
-      const n=parseSpokenNumber(m[2]);
-      if(n!==null && m[3]){
-        out.push({name:m[1],amount:n,content:m[3]});
-      }
-    }
-  }
-
+  const chunks=text.replace(/[。;]/g,",").split(/[,，\n]+/).map(s=>s.trim()).filter(Boolean);const out=[];
+  for(const chunk of chunks){let m=chunk.match(/^(\S+?)\s+([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);if(m){out.push({name:m[1],amount:Number(m[2]),content:m[3]||""});continue;}m=chunk.match(/^(\S+?)\s+(\S+)\s*(.*)$/);if(m){const n=parseSpokenNumber(m[2]);if(n!==null&&m[3])out.push({name:m[1],amount:n,content:m[3]});}}
   return out;
 }
-
 $("voiceBtn").addEventListener("click",()=>{
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-
-  if(!SR){
-    setStatus("이 브라우저에서는 음성 인식을 지원하지 않을 수 있어요. Chrome에서 다시 시도해 주세요.","error");
-    return;
-  }
-
-  if(listening&&recognition){
-    recognition.stop();
-    return;
-  }
-
-  recognition=new SR();
-  recognition.lang="ko-KR";
-  recognition.continuous=true;
-  recognition.interimResults=true;
-  listening=true;
-
-  $("voiceBtn").textContent="■ 음성 입력 종료";
-  setStatus("듣는 중입니다. 예: 민수 25 점심, 영희 18 교통비");
-
+  if(!SR){setStatus("이 브라우저에서는 음성 인식을 지원하지 않을 수 있어요. Chrome에서 다시 시도해 주세요.","error");return;}
+  if(listening&&recognition){recognition.stop();return;}
+  recognition=new SR();recognition.lang="ko-KR";recognition.continuous=true;recognition.interimResults=true;listening=true;$("voiceBtn").textContent="■ 음성 입력 종료";setStatus("듣는 중입니다. 예: 민수 25 점심, 영희 18 교통비");
   let finalText="";
-
-  recognition.onresult=e=>{
-    let interim="";
-
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal)finalText+=t+" ";
-      else interim+=t;
-    }
-
-    $("bulk").value=(finalText+interim).trim();
-  };
-
-  recognition.onerror=e=>{
-    setStatus("음성 인식 오류: "+e.error+". 마이크 권한을 확인해 주세요.","error");
-  };
-
+  recognition.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t+" ";else interim+=t;}$("bulk").value=(finalText+interim).trim();};
+  recognition.onerror=e=>setStatus("음성 인식 오류: "+e.error+". 마이크 권한을 확인해 주세요.","error");
   recognition.onend=async()=>{
-    listening=false;
-    $("voiceBtn").textContent="🎙 음성 입력";
-
-    if(!finalText.trim())return;
-
-    const parsed=parseSpeech(finalText);
-
-    if(!parsed.length){
-      setStatus("음성을 인식했지만 항목을 구분하지 못했어요. 입력 내용을 확인한 뒤 일괄 입력을 눌러 주세요.","error");
-      return;
-    }
-
-    let count=0;
-    for(const x of parsed){
-      if(await addItem(x.name,x.amount,x.content))count++;
-    }
-
-    render();
-
-    if(count===parsed.length){
-      $("bulk").value="";
-      setStatus(count+"건을 음성으로 추가했어요.","ok");
-    }else{
-      setStatus(count+"건 추가 완료. 나머지 항목을 확인해 주세요.","error");
-    }
+    listening=false;$("voiceBtn").textContent="🎙 음성 입력";if(!finalText.trim())return;
+    const parsed=parseSpeech(finalText);if(!parsed.length){setStatus("음성을 인식했지만 항목을 구분하지 못했어요. 입력 내용을 확인한 뒤 일괄 입력을 눌러 주세요.","error");return;}
+    let count=0;for(const x of parsed){if(await addItem(x.name,x.amount,x.content))count++;}render();
+    if(count===parsed.length){$("bulk").value="";setStatus(count+"건을 음성으로 추가했어요.","ok");}else setStatus(count+"건 추가 완료. 나머지 항목을 확인해 주세요.","error");
   };
-
-  try{
-    recognition.start();
-  }catch(e){
-    listening=false;
-    $("voiceBtn").textContent="🎙 음성 입력";
-    setStatus("음성 인식을 시작하지 못했어요. 다시 시도해 주세요.","error");
-  }
+  try{recognition.start();}catch(e){listening=false;$("voiceBtn").textContent="🎙 음성 입력";setStatus("음성 인식을 시작하지 못했어요. 다시 시도해 주세요.","error");}
 });
 
-/* 시작 */
-if(cloudReady){
-  loadCloud();
-  setInterval(loadCloud,30000);
-}else{
-  db=readDB();
-  render();
-  renderEmployees();
-  setStatus("로컬 저장 모드입니다. 공유 데이터베이스 설정을 확인해 주세요.","error");
-}
+/* 시작: 직원 명부는 공유로 불러오고 정산은 로컬에서만 불러옴 */
+$("day").value=today();
+db=readDB();
+render();
+renderEmployees();
+loadCloud();
+setInterval(loadCloud,30000);
 </script>
 </body>
 </html>
